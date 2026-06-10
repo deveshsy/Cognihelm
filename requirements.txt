@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic
+langgraph
+langgraph-checkpoint-sqlite
+requests
+pyjwt[crypto]
+python-multipart

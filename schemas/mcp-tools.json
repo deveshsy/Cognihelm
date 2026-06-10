@@ -1,0 +1,30 @@
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tools": [
+      {
+        "name": "request_human_approval",
+        "description": "Pauses agent execution and requests human authorization for a specific action.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "agent_context": {
+              "type": "object",
+              "description": "The semantic state of the agent execution to be approved."
+            },
+            "human_routing_target": {
+              "type": "string",
+              "description": "Identifier for the human operator or channel."
+            },
+            "agent_callback_url": {
+              "type": "string",
+              "description": "The URL to receive the resumption token."
+            }
+          },
+          "required": ["agent_context", "human_routing_target", "agent_callback_url"]
+        }
+      }
+    ]
+  }
+}

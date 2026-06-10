@@ -1,0 +1,29 @@
+{
+  "name": "Universal HITL Gateway",
+  "description": "Non-custodial asynchronous human-in-the-loop approval routing. Strictly A2A and x402 V2 compliant.",
+  "url": "https://recall-tantrum-mold.ngrok-free.dev/v1",
+  "version": "2.0.0",
+  "protocol_support": {
+    "a2a": "1.0",
+    "x402": "2.0"
+  },
+  "compliance": {
+    "mediator": "Crossmint",
+    "model": "Non-Custodial-Software-Router"
+  },
+  "capabilities": {
+    "streaming": false,
+    "tasks": true
+  },
+  "payment": {
+    "accepted_assets": ["USDC"],
+    "chains": ["base-sepolia"],
+    "flat_fee": "0.01"
+  },
+  "skills": [
+    {
+      "name": "tasks/send",
+      "description": "Initiates a human approval task. Requires x402 V2 payment signature."
+    }
+  ]
+}

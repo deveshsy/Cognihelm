@@ -1,0 +1,12 @@
+.env
+venv/
+.venv/
+__pycache__/
+ngrok
+*.log
+*.png
+*.py[cod]
+*$py.class
+.DS_Store
+private.pem
+public.pem

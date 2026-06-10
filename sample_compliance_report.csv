@@ -1,0 +1,5 @@
+timestamp,task_id,event_type,actor_id,payload_hash,status,reasoning_lineage
+1717621200000000000,tx-ach-45k,AGENT_EXECUTION_REQUEST,agent-finance-01,7f8cf2...7d,REQUEST_INITIATED,"Agent identifies $45,000 ACH requirement for vendor Q3 invoice."
+1717621200500000000,tx-ach-45k,SYSTEM_CIRCUIT_BREAKER,cognihelm-protocol,7f8cf2...7d,PAUSED_AWAITING_HITL,"Automated threshold of $10,000 exceeded. Pausing execution and dispatching Slack notification."
+1717621500000000000,tx-ach-45k,HUMAN_APPROVAL_SIGNAL,user-cto-devesh,7f8cf2...7d,HUMAN_APPROVED,"CTO reviewed payload hash and verified vendor account details via Slack interactive card."
+1717621500800000000,tx-ach-45k,EXECUTION_RESUMPTION,agent-finance-01,7f8cf2...7d,SUCCESS_RESUMED,"Cryptographic resumption JWT verified. Agent resuming ACH dispatch node."
