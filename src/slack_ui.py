@@ -2,12 +2,18 @@ import os
 import urllib.request
 import json
 from dotenv import load_dotenv
-from src.aws_ledger import append_ledger_entry, get_latest_task_status, is_task_resolved
+from src.aws_ledger import append_ledger_entry, get_latest_task_status
+
+# Try to dynamically import the enterprise circuit breaker
+try:
+    from ee.circuit_breaker import is_task_resolved
+except ImportError:
+    is_task_resolved = lambda task_id: False  # Fallback for Open-Core
 
 # Load credentials from your .env file
 load_dotenv()
 
-def dispatch_approval_card(task_id: str, agent_name: str, action: str, details: dict):
+def dispatch_approval_card(task_id: str, agent_name: str, action: str, details: dict, payload_hash: str = None):
     """
     Sends an interactive Block Kit UI card to Slack ONLY if the task is unresolved.
     """
@@ -99,7 +105,8 @@ def dispatch_approval_card(task_id: str, agent_name: str, action: str, details: 
                     "action": action,
                     "details": details,
                     "slack_ts": result.get("ts")
-                }
+                },
+                payload_hash=payload_hash
             )
             print(f"SUCCESS: Card sent and PENDING state recorded for {task_id}")
         else:
@@ -110,12 +117,16 @@ def dispatch_approval_card(task_id: str, agent_name: str, action: str, details: 
         return {"ok": False, "error": str(e)}
 
 if __name__ == "__main__":
+    import sys
+    task_id = sys.argv[1] if len(sys.argv) > 1 else "FIN_TXN#TEST99"
+    payload_hash = sys.argv[2] if len(sys.argv) > 2 else None
     # Test sending a card
-    print("Dispatching test card to Slack...")
+    print(f"Dispatching test card to Slack for task {task_id} with payload hash {payload_hash}...")
     dispatch_approval_card(
-        task_id="FIN_TXN#TEST99",
+        task_id=task_id,
         agent_name="LangGraph_Finance_Bot",
         action="execute_wire_transfer",
-        details={"amount": "$50,000", "destination": "Offshore Acct 99182"}
+        details={"amount": "$50,000", "destination": "Offshore Acct 99182"},
+        payload_hash=payload_hash
     )
     print("Check your #ai-approvals channel!")

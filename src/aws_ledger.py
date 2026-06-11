@@ -26,14 +26,7 @@ def get_latest_task_status(task_id: str):
     items = response.get('Items', [])
     return items[0] if items else None
 
-def is_task_resolved(task_id: str) -> bool:
-    """CIRCUIT BREAKER: Returns True if the task is already APPROVED or REJECTED."""
-    latest = get_latest_task_status(task_id)
-    if not latest:
-        return False
-    return latest.get("status") in ["APPROVED", "REJECTED"]
-
-def append_ledger_entry(task_id: str, status: str, metadata: dict):
+def append_ledger_entry(task_id: str, status: str, metadata: dict, payload_hash: str = None):
     """Writes an immutable, timestamped record to the ledger."""
     timestamp = int(time.time() * 1000)
     item = {
@@ -42,4 +35,6 @@ def append_ledger_entry(task_id: str, status: str, metadata: dict):
         'status': status,
         'metadata': metadata
     }
+    if payload_hash:
+        item['payload_hash'] = payload_hash
     return table.put_item(Item=item)

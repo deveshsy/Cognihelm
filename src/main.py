@@ -2,13 +2,23 @@ import uuid
 import json
 import urllib.request
 from fastapi import FastAPI, Request
-from src.slack_auth import SlackSignatureMiddleware
-from src.aws_ledger import append_ledger_entry, get_latest_task_status, is_task_resolved
+from src.aws_ledger import append_ledger_entry, get_latest_task_status
 
 app = FastAPI(title="CogniHelm HITL Gateway")
 
-# Apply security middleware
-app.add_middleware(SlackSignatureMiddleware)
+# DYNAMIC SECURITY CHECK: Look for private enterprise extensions
+try:
+    from ee.advanced_auth import SlackSignatureMiddleware
+    from ee.circuit_breaker import is_task_resolved
+    
+    # Inject the proprietary security middleware if available
+    app.add_middleware(SlackSignatureMiddleware)
+    HAS_ENTERPRISE_SECURITY = True
+    print("🔒 [CogniHelm]: Enterprise Security & Circuit Breaker Active.")
+except ImportError:
+    HAS_ENTERPRISE_SECURITY = False
+    is_task_resolved = lambda task_id: False  # Fallback for Open-Core
+    print("🟢 [CogniHelm]: Running Open-Core mode (Development/Unverified).")
 
 @app.get("/")
 async def health():
@@ -40,13 +50,18 @@ async def handle_slack_event(request: Request):
         status = "APPROVED" if action.get("action_id") == "hitl_approve" else "REJECTED"
         emoji = "✅" if status == "APPROVED" else "❌"
         
+        # Retrieve the payload_hash from the initial PENDING entry
+        pending_record = get_latest_task_status(task_id)
+        payload_hash = pending_record.get("payload_hash") if pending_record else None
+        
         append_ledger_entry(
             task_id=task_id,
             status=status,
             metadata={
                 "auditor": user_name,
                 "slack_id": payload.get("user", {}).get("id")
-            }
+            },
+            payload_hash=payload_hash
         )
         
         update_message = {
@@ -70,12 +85,18 @@ async def check_task_status(task_id: str):
     if not record:
         return {"status": "NOT_FOUND"}
         
-    return {
+    response_data = {
         "task_id": task_id,
         "status": record.get("status"),
         "timestamp": record.get("timestamp"),
-        "metadata": record.get("metadata")
+        "metadata": record.get("metadata"),
+        "payload_hash": record.get("payload_hash")
     }
+    if record.get("status") == "APPROVED":
+        response_data["authorized_at"] = record.get("timestamp")
+    elif record.get("status") == "REJECTED":
+        response_data["denied_at"] = record.get("timestamp")
+    return response_data
 
 if __name__ == "__main__":
     import uvicorn
