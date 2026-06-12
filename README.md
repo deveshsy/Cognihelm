@@ -24,27 +24,38 @@ CogniHelm is an enterprise-grade middleware protocol providing **Immutable Human
 CogniHelm acts as an immutable transaction guard rail between your agentic reasoning loop and the execution environment:
 
 ```mermaid
-graph TD;
-    Agent[AI Agent Engine] -- 1. Ingests Proposal --> Gateway[CogniHelm Gateway]
-    Gateway -- 2. Log Pending Action --> Ledger[(Immutable DynamoDB Ledger)]
-    Gateway -- 3. Dispatch Notification Card --> Channels{Communication Channels}
+flowchart LR
+    %% Styling Classes
+    classDef primary fill:#2C3E50,stroke:#3498DB,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+    classDef db fill:#2C3E50,stroke:#F1C40F,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+    classDef chat fill:#2C3E50,stroke:#2ECC71,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+
+    %% Nodes (Wrapped in quotes to protect HTML from the parser)
+    AgentReq["🤖 AI Agent Engine <br/>(Reasoning)"]:::primary
+    Gateway{"🛡️ CogniHelm Gateway"}:::primary
+    Ledger[("🗄️ DynamoDB Ledger")]:::db
+    AgentExec["🤖 AI Agent Engine <br/>(Execution)"]:::primary
+    Target["🎯 Target Environment"]:::primary
+
+    subgraph Channels ["📱 Human Approval Channels"]
+        direction TB
+        Slack["Slack"]:::chat
+        Teams["MS Teams"]:::chat
+        WhatsApp["WhatsApp"]:::chat
+        Telegram["Telegram"]:::chat
+        Discord["Discord"]:::chat
+    end
+
+    %% Left to Right Flow
+    AgentReq -->|"1. Request Action"| Gateway
+    Gateway -->|"2. Log Pending Action"| Ledger
+    Gateway -->|"3. Dispatch Alert"| Channels
     
-    Channels --> Slack[Slack Block Kit]
-    Channels --> Teams[MS Teams Adaptive Cards]
-    Channels --> Meta[WhatsApp Business API]
-    Channels --> Tele[Telegram Bot API]
-    Channels --> Disc[Discord Components]
+    Channels -->|"4. Human Approves"| Gateway
+    Gateway -->|"5. Log Final Decision"| Ledger
     
-    Slack -- 4. Sign/Approve Event --> Gateway
-    Teams -- 4. Sign/Approve Event --> Gateway
-    Meta -- 4. Sign/Approve Event --> Gateway
-    Tele -- 4. Sign/Approve Event --> Gateway
-    Disc -- 4. Sign/Approve Event --> Gateway
-    
-    Gateway -- 5. Log Approved/Rejected Event --> Ledger
-    Agent -- 6. Poll Authorization Status --> Gateway
-    Gateway -. 7. Return Final State & Payload Hash .-> Agent
-    Agent -- 8. Execute Payload Interlock & Action --> Target[Target Environment]
+    Gateway ===>|"6. Return Interlocked Payload"| AgentExec
+    AgentExec ===>|"7. Execute Approved Action"| Target
 ```
 
 ---
