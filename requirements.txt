@@ -6,3 +6,8 @@ langgraph-checkpoint-sqlite
 requests
 pyjwt[crypto]
 python-multipart
+pydantic-settings
+pytest
+httpx
+boto3
+python-dotenv

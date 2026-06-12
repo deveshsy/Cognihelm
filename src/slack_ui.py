@@ -1,17 +1,13 @@
-import os
 import urllib.request
 import json
-from dotenv import load_dotenv
 from src.aws_ledger import append_ledger_entry, get_latest_task_status
+from src.config import get_settings
 
 # Try to dynamically import the enterprise circuit breaker
 try:
     from ee.circuit_breaker import is_task_resolved
 except ImportError:
     is_task_resolved = lambda task_id: False  # Fallback for Open-Core
-
-# Load credentials from your .env file
-load_dotenv()
 
 def dispatch_approval_card(task_id: str, agent_name: str, action: str, details: dict, payload_hash: str = None):
     """
@@ -28,7 +24,7 @@ def dispatch_approval_card(task_id: str, agent_name: str, action: str, details: 
         return {"ok": False, "error": "task_already_pending"}
 
     # --- 2. DISPATCH TO SLACK ---
-    bot_token = os.getenv("SLACK_BOT_TOKEN")
+    bot_token = get_settings().slack_bot_token
     channel = "#ai-apporvals" 
     details_str = "\n".join([f"*{k}:* {v}" for k, v in details.items()])
 

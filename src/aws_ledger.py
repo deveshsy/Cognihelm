@@ -1,20 +1,19 @@
 import boto3
-import os
 import time
 from boto3.dynamodb.conditions import Key
-from dotenv import load_dotenv
+from src.config import get_settings
 
-load_dotenv()
+settings = get_settings()
 
 # Initialize the DynamoDB resource
 dynamodb = boto3.resource(
     'dynamodb',
-    region_name=os.getenv('AWS_REGION', 'eu-north-1'),
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+    region_name=settings.aws_region,
+    aws_access_key_id=settings.aws_access_key_id,
+    aws_secret_access_key=settings.aws_secret_access_key
 )
 
-table = dynamodb.Table(os.getenv('DYNAMODB_TABLE_NAME', 'CogniHelm_Ledger'))
+table = dynamodb.Table(settings.dynamodb_table_name)
 
 def get_latest_task_status(task_id: str):
     """Retrieves the most recent ledger entry for a specific task."""

@@ -1,40 +1,120 @@
-# CogniHelm: Immutable HITL Governance for Autonomous Agents
+# CogniHelm
 
-[![Protocol: A2A](https://img.shields.io/badge/Protocol-A2A-blue.svg)](https://a2a-protocol.org)
-[![Compliance: EU AI Act](https://img.shields.io/badge/Compliance-EU%20AI%20Act%20Art.12-green.svg)](https://artificialintelligenceact.eu/)
+[![Docker](https://img.shields.io/badge/Docker-Supported-blue.svg?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Python](https://img.shields.io/badge/Python-3.11+-green.svg?logo=python&logoColor=white)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-orange.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Compliance: EU AI Act](https://img.shields.io/badge/Compliance-EU%20AI%20Act%20Art.12-emerald.svg)](https://artificialintelligenceact.eu/)
 
-## The "Log and Pray" Problem
-Current AI agent frameworks (LangChain, AutoGen, CrewAI) treat execution logs as ephemeral side-effects. In high-stakes fintech environments, "logging" is insufficient. If an autonomous agent triggers a $1M capital reallocation, a standard JSON log file provides zero cryptographic guarantee of human authorization or state integrity. Under **EU AI Act Article 12**, high-risk AI systems must ensure traceability and "logging of events throughout the system's lifetime."
+CogniHelm is an enterprise-grade middleware protocol providing **Immutable Human-in-the-Loop (HITL) Governance** for autonomous AI agents, enforcing a cryptographic pause-and-sign workflow to ensure all agentic actions are authorized and auditable.
 
-## The CogniHelm Solution
-CogniHelm is a framework-agnostic middleware protocol that acts as an **Immutable Transaction Circuit Breaker**. It sits between the agent's reasoning engine and the execution environment, enforcing a strict cryptographic pause-and-sign workflow.
+---
 
-### Architectural Pillars
-1. **Append-Only Ledger (No Updates):** CogniHelm utilizes an immutable data model. We explicitly forbid `UpdateItem` or `DeleteItem` operations. Every state change—from initial reasoning to final human approval—is persisted as a unique, timestamped row in DynamoDB.
-2. **Cryptographic Resumption:** Execution context is hashed using SHA-256. Resumption is only possible via a signed RS256 JWT, preventing "Semantic Drift" where an agent modifies a payload post-approval.
-3. **Hardware-Gated Approval:** Integration with Slack/Teams Block Kit ensures that human decisions are captured at the edge and cryptographically bound to the transaction ID.
+## 🚀 Key Features
 
-## Data Model (DynamoDB)
-We employ a high-resolution time-series schema to ensure strict linearizability of agent events.
+*   **🤖 Model-Agnostic Core:** Integrates seamlessly with any agent framework (LangGraph, CrewAI, AutoGen, or custom runtimes).
+*   **🔌 Omni-Channel Webhook Adapters:** Dynamic routing for human decisions natively supporting **Slack**, **Microsoft Teams**, **WhatsApp**, **Telegram**, and **Discord**.
+*   **🔒 Forensic Payload Interlocking:** Prevents payload modification and "Semantic Drift" by performing SHA-256 integrity checks post-approval.
+*   **⚡ Linear Circuit Breaker:** Implements an append-only architecture that strictly locks transactions once approved or rejected, preventing double-voting.
+*   **🖥️ Auditor-Grade Compliance Console:** Dedicated, secure admin dashboard featuring text search, status filters, and one-click CSV export of raw ledger streams.
 
-* **Partition Key (PK):** `task_id` (UUIDv4)
-* **Sort Key (SK):** `timestamp` (Epoch nanoseconds)
+---
 
-| Task ID (PK) | Timestamp (SK) | Event Type | Status | Payload Hash |
-| :--- | :--- | :--- | :--- | :--- |
-| `tx-99` | `1717621200000` | `INGESTION` | `PENDING` | `e3b0c4...` |
-| `tx-99` | `1717621200500` | `HITL_PAUSE` | `AWAITING` | `e3b0c4...` |
-| `tx-99` | `1717621500000` | `HUMAN_SIG` | `APPROVED` | `e3b0c4...` |
+## 📐 System Architecture
 
-## Quick Start (Python)
-```python
-from ledger import CogniHelmLedger
+CogniHelm acts as an immutable transaction guard rail between your agentic reasoning loop and the execution environment:
 
-ledger = CogniHelmLedger(table_name="CogniHelm_Audit_v1")
-ledger.append_event(
-    task_id="ach-7788",
-    event_type="AGENT_PROPOSAL",
-    actor_id="risk-agent-01",
-    payload={"amount": 45000, "currency": "USD"}
-)
+```mermaid
+graph TD;
+    Agent[AI Agent Engine] -- 1. Ingests Proposal --> Gateway[CogniHelm Gateway]
+    Gateway -- 2. Log Pending Action --> Ledger[(Immutable DynamoDB Ledger)]
+    Gateway -- 3. Dispatch Notification Card --> Channels{Communication Channels}
+    
+    Channels --> Slack[Slack Block Kit]
+    Channels --> Teams[MS Teams Adaptive Cards]
+    Channels --> Meta[WhatsApp Business API]
+    Channels --> Tele[Telegram Bot API]
+    Channels --> Disc[Discord Components]
+    
+    Slack -- 4. Sign/Approve Event --> Gateway
+    Teams -- 4. Sign/Approve Event --> Gateway
+    Meta -- 4. Sign/Approve Event --> Gateway
+    Tele -- 4. Sign/Approve Event --> Gateway
+    Disc -- 4. Sign/Approve Event --> Gateway
+    
+    Gateway -- 5. Log Approved/Rejected Event --> Ledger
+    Agent -- 6. Poll Authorization Status --> Gateway
+    Gateway -. 7. Return Final State & Payload Hash .-> Agent
+    Agent -- 8. Execute Payload Interlock & Action --> Target[Target Environment]
 ```
+
+---
+
+## 🛠️ Quickstart
+
+Spawning a fully functional local CogniHelm gateway along with the compliance console is simple:
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/deveshsy/Cognihelm.git
+cd Cognihelm
+```
+
+### 2. Configure Local Environment
+Create your `.env` file using the template:
+```bash
+cp .env.example .env
+```
+*Make sure to open `.env` and fill in your Slack secrets and AWS credentials.*
+
+### 3. Spin Up Docker Compose
+Launch both the API Gateway (`port 8000`) and the Compliance Console (`port 8080`) instantly in isolated containers:
+```bash
+docker compose up --build
+```
+
+---
+
+## ☁️ CogniHelm Cloud & Enterprise
+
+CogniHelm is an open-core project. You can self-host the open-source **Community Edition** forever, completely free. 
+
+For teams that need managed infrastructure and advanced compliance features, we offer **CogniHelm Cloud**.
+
+| Feature | Community (Open Source) | Cloud (Managed SaaS) |
+| :--- | :--- | :--- |
+| **Hosting** | Self-Hosted (Docker) | Fully Managed Cloud |
+| **Ledger DB** | Bring Your Own AWS | Included & Backed Up |
+| **Integrations** | All Webhook Adapters | All Webhook Adapters |
+| **Compliance Console** | Basic Local Dashboard | Hosted Multi-Tenant Dashboard |
+| **Security** | Standard API Keys | SAML / SSO Integration |
+| **Support** | GitHub Issues | Dedicated Slack Channel & SLA |
+
+**[👉 Join the CogniHelm Cloud Waitlist Here](mailto:cognihelm@gmail.com)**
+
+---
+
+## ⚙️ Environment Variables
+
+Configure your local `.env` file with the following variables:
+
+| Variable Name | Required | Default Value | Description |
+| :--- | :--- | :--- | :--- |
+| `ENVIRONMENT` | No | `dev` | Active environment descriptor (`dev`, `prod`, `test`). |
+| `PORT` | No | `8000` | Gateway listening port. |
+| `DYNAMODB_TABLE_NAME` | Yes | `CogniHelm_Ledger` | DynamoDB audit logs Table name. |
+| `AWS_REGION` | Yes | `eu-north-1` | Target AWS region (Stockholm preferred). |
+| `AWS_ACCESS_KEY_ID` | Yes | - | IAM User Access Key with DynamoDB write privileges. |
+| `AWS_SECRET_ACCESS_KEY` | Yes | - | IAM User Secret Key. |
+| `SLACK_SIGNING_SECRET` | Yes | - | Cryptographic key to verify Slack webhook signature integrity. |
+| `SLACK_BOT_TOKEN` | No | - | OAuth Token used to post interactive Block Kit approval cards. |
+| `MICROSOFT_APP_ID` | No | - | Azure Bot App ID for MS Teams messaging. |
+| `MICROSOFT_APP_PASSWORD` | No | - | Azure Bot App Password. |
+| `WHATSAPP_VERIFY_TOKEN` | No | - | Subscription handshake token for Meta WhatsApp webhooks. |
+| `TELEGRAM_BOT_TOKEN` | No | - | Auth secret token for incoming Telegram Callback queries. |
+| `DISCORD_PUBLIC_KEY` | No | - | Ed25519 public key to verify Discord interactions. |
+
+---
+
+## 📜 License
+
+This project is licensed under the Apache 2.0 License - see the LICENSE file for details.
