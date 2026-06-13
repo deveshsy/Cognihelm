@@ -58,6 +58,42 @@ flowchart LR
     AgentExec ===>|"7. Execute Approved Action"| Target
 ```
 
+## 📁 Directory Structure
+
+This repository follows a professional, enterprise-grade architecture:
+
+```text
+hitl_api/
+├── src/                    # API Gateway & Console Source
+│   ├── main.py             # Gateway entrypoint & setup
+│   ├── console.py          # Compliance console entrypoint & setup
+│   ├── agent_sim.py        # Local client agent simulator
+│   │
+│   ├── api/                # API Endpoints & Middlewares
+│   │   ├── routes.py       # Webhook callback and polling routes
+│   │   ├── middleware.py   # Slack signature validation middleware
+│   │   └── adapters/       # Omni-channel webhook platform adapters
+│   │       ├── base.py
+│   │       ├── slack_adapter.py
+│   │       ├── teams_adapter.py
+│   │       ├── whatsapp_adapter.py
+│   │       ├── telegram_adapter.py
+│   │       └── discord_adapter.py
+│   │
+│   ├── services/           # Core business logic services
+│   │   ├── circuit_breaker.py  # Linearity lock check logic
+│   │   └── slack_ui.py         # Block Kit UI card dispatcher
+│   │
+│   ├── core/               # Application configurations
+│   │   └── config.py       # Type-safe pydantic-settings config
+│   │
+│   ├── db/                 # Database operations
+│   │   └── aws_ledger.py   # DynamoDB base ledger query and logs
+│   │
+│   └── templates/          # HTML Templates for console UI
+│       └── dashboard.html  # Single-page Tailwind auditor console
+```
+
 ---
 
 ## 🛠️ Quickstart

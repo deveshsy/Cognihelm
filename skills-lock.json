@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "dead-code": {
+      "source": "parcadei/continuous-claude-v3",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/dead-code/SKILL.md",
+      "computedHash": "a8d4f025ee6e04d925e56835c19de1446b4d7ead8e5dfe230e5d54d34a9531ec"
+    }
+  }
+}

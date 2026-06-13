@@ -83,6 +83,7 @@ If you add a new platform adapter or edit webhook endpoints:
 
 ## 🎨 Code & Security Conventions
 
-1.  **Non-Blocking Async I/O**: Do not run synchronous blocking calls (like `urllib` or `requests`) inside FastAPI `async def` routes. Use `httpx.AsyncClient` or run synchronous calls in threadpools.
-2.  **Signature Verification**: Every new channel adapter must implement cryptographic signature verification inside its `verify_signature(request)` method. Never accept unverified webhook payloads in production.
-3.  **Immutable Operations**: Never use `UpdateItem` or `DeleteItem` operations on the ledger database. All transaction updates must be written as new, timestamped rows.
+1.  **Directory Structure Conventions**: Place API routers and adapters inside `src/api/` (adapters go in `src/api/adapters/`), business logic inside `src/services/`, database operations inside `src/db/`, and central settings models inside `src/core/`.
+2.  **Non-Blocking Async I/O**: Do not run synchronous blocking calls (like `urllib` or `requests`) inside FastAPI `async def` routes. Use `httpx.AsyncClient` or run synchronous calls in threadpools.
+3.  **Signature Verification**: Every new channel adapter must implement cryptographic signature verification inside its `verify_signature(request)` method. Never accept unverified webhook payloads in production.
+4.  **Immutable Operations**: Never use `UpdateItem` or `DeleteItem` operations on the ledger database. All transaction updates must be written as new, timestamped rows.

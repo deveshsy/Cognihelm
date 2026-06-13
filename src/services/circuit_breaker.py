@@ -1,4 +1,4 @@
-from src.aws_ledger import get_latest_task_status
+from src.db.aws_ledger import get_latest_task_status
 
 def is_task_resolved(task_id: str) -> bool:
     """CIRCUIT BREAKER: Returns True if the task is already APPROVED or REJECTED."""

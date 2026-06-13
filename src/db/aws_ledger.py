@@ -1,7 +1,7 @@
 import boto3
 import time
 from boto3.dynamodb.conditions import Key
-from src.config import get_settings
+from src.core.config import get_settings
 
 settings = get_settings()
 

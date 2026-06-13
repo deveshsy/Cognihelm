@@ -1,5 +1,5 @@
 from fastapi import Request
-from src.adapters.base import WebhookAdapter
+from src.api.adapters.base import WebhookAdapter
 
 class TeamsAdapter(WebhookAdapter):
     """

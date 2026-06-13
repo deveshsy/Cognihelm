@@ -1,8 +1,8 @@
 import hmac
 import hashlib
 from fastapi import Request
-from src.adapters.base import WebhookAdapter
-from src.config import get_settings
+from src.api.adapters.base import WebhookAdapter
+from src.core.config import get_settings
 
 class WhatsappAdapter(WebhookAdapter):
     """

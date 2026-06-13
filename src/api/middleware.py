@@ -4,7 +4,7 @@ import time
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from src.config import get_settings
+from src.core.config import get_settings
 
 class SlackSignatureMiddleware(BaseHTTPMiddleware):
     """

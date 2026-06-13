@@ -13,9 +13,9 @@ def test_whatsapp_get_challenge(client):
     assert response.status_code == 200
     assert response.text == "1158201444"
 
-@patch("src.main.is_task_resolved")
-@patch("src.main.get_latest_task_status")
-@patch("src.main.append_ledger_entry")
+@patch("src.api.routes.is_task_resolved")
+@patch("src.api.routes.get_latest_task_status")
+@patch("src.api.routes.append_ledger_entry")
 def test_telegram_post_callback(mock_append, mock_get_status, mock_is_resolved, client):
     """Verifies Telegram webhook POST request parsing and signature token validation."""
     mock_is_resolved.return_value = False
@@ -57,9 +57,9 @@ def test_telegram_post_callback(mock_append, mock_get_status, mock_is_resolved, 
         payload_hash="mocked_telegram_hash"
     )
 
-@patch("src.main.is_task_resolved")
-@patch("src.main.get_latest_task_status")
-@patch("src.main.append_ledger_entry")
+@patch("src.api.routes.is_task_resolved")
+@patch("src.api.routes.get_latest_task_status")
+@patch("src.api.routes.append_ledger_entry")
 def test_teams_post_callback(mock_append, mock_get_status, mock_is_resolved, client):
     """Verifies Microsoft Teams webhook POST parsing of Adaptive Card values."""
     mock_is_resolved.return_value = False
@@ -100,9 +100,9 @@ def test_teams_post_callback(mock_append, mock_get_status, mock_is_resolved, cli
         payload_hash="mocked_teams_hash"
     )
 
-@patch("src.main.is_task_resolved")
-@patch("src.main.get_latest_task_status")
-@patch("src.main.append_ledger_entry")
+@patch("src.api.routes.is_task_resolved")
+@patch("src.api.routes.get_latest_task_status")
+@patch("src.api.routes.append_ledger_entry")
 def test_slack_post_callback_success(mock_append, mock_get_status, mock_is_resolved, client):
     """Verifies Slack webhook POST request parsing with valid signature verification."""
     import hmac
@@ -160,9 +160,9 @@ def test_slack_post_callback_success(mock_append, mock_get_status, mock_is_resol
         }
         mock_post.assert_called_once()
 
-@patch("src.main.is_task_resolved")
-@patch("src.main.get_latest_task_status")
-@patch("src.main.append_ledger_entry")
+@patch("src.api.routes.is_task_resolved")
+@patch("src.api.routes.get_latest_task_status")
+@patch("src.api.routes.append_ledger_entry")
 def test_slack_post_callback_invalid_signature(mock_append, mock_get_status, mock_is_resolved, client):
     """Verifies Slack webhook POST request returns 403 Forbidden with invalid signature."""
     import time

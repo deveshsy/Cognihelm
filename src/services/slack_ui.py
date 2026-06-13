@@ -1,9 +1,8 @@
 import urllib.request
 import json
-from src.aws_ledger import append_ledger_entry, get_latest_task_status
-from src.config import get_settings
-
-from src.circuit_breaker import is_task_resolved
+from src.db.aws_ledger import append_ledger_entry, get_latest_task_status
+from src.core.config import get_settings
+from src.services.circuit_breaker import is_task_resolved
 
 def dispatch_approval_card(task_id: str, agent_name: str, action: str, details: dict, payload_hash: str = None):
     """
@@ -21,7 +20,7 @@ def dispatch_approval_card(task_id: str, agent_name: str, action: str, details: 
 
     # --- 2. DISPATCH TO SLACK ---
     bot_token = get_settings().slack_bot_token
-    channel = "#ai-apporvals" 
+    channel = "#ai-approvals" 
     details_str = "\n".join([f"*{k}:* {v}" for k, v in details.items()])
 
     payload = {
@@ -88,7 +87,6 @@ def dispatch_approval_card(task_id: str, agent_name: str, action: str, details: 
         
         if result.get("ok"):
             # --- 3. LOG INITIAL PENDING STATE ---
-            # Now the ledger knows a request has been dispatched.
             append_ledger_entry(
                 task_id=task_id,
                 status="PENDING",
@@ -112,7 +110,6 @@ if __name__ == "__main__":
     import sys
     task_id = sys.argv[1] if len(sys.argv) > 1 else "FIN_TXN#TEST99"
     payload_hash = sys.argv[2] if len(sys.argv) > 2 else None
-    # Test sending a card
     print(f"Dispatching test card to Slack for task {task_id} with payload hash {payload_hash}...")
     dispatch_approval_card(
         task_id=task_id,

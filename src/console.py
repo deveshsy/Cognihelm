@@ -2,7 +2,7 @@ import os
 import decimal
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
-from src.aws_ledger import table
+from src.db.aws_ledger import table
 
 app = FastAPI(title="CogniHelm Enterprise Compliance Console")
 

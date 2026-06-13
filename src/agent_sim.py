@@ -32,7 +32,7 @@ def main():
         import os
         env = os.environ.copy()
         env["PYTHONPATH"] = "."
-        subprocess.run([sys.executable, "src/slack_ui.py", TASK_ID, payload_hash], check=True, env=env)
+        subprocess.run([sys.executable, "src/services/slack_ui.py", TASK_ID, payload_hash], check=True, env=env)
     except Exception as e:
         print(f"❌ [Error]: Failed to dispatch Slack card notification: {e}")
         sys.exit(1)
