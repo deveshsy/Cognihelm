@@ -7,7 +7,7 @@ class SlackAdapter(WebhookAdapter):
     Slack block-kit interactive components adapter.
     """
     async def verify_signature(self, request: Request) -> bool:
-        # Signature verification is performed by SlackSignatureMiddleware in the EE layer.
+        # Signature verification is performed by SlackSignatureMiddleware in the src.middleware layer.
         return True
 
     async def extract_payload(self, request: Request) -> dict:
@@ -37,3 +37,28 @@ class SlackAdapter(WebhookAdapter):
             "user_id": user_id,
             "response_url": response_url
         }
+
+    async def send_response_update(self, response_url: str, text: str) -> bool:
+        """
+        Asynchronously sends Slack callback updates using HTTPX.
+        """
+        if not response_url:
+            return False
+            
+        import httpx
+        payload = {
+            "replace_original": "true",
+            "text": text
+        }
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    response_url,
+                    json=payload,
+                    headers={"Content-Type": "application/json"},
+                    timeout=5.0
+                )
+                return response.status_code == 200
+        except Exception as e:
+            print(f"ERROR: Failed to send Slack callback response update: {e}")
+            return False

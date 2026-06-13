@@ -1,7 +1,10 @@
 import uuid
 import json
 import urllib.request
+import logging
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from src.aws_ledger import append_ledger_entry, get_latest_task_status
 from src.adapters.slack_adapter import SlackAdapter
 from src.adapters.teams_adapter import TeamsAdapter
@@ -20,21 +23,36 @@ adapters = {
     "discord": DiscordAdapter()
 }
 
-app = FastAPI(title="CogniHelm HITL Gateway")
+app = FastAPI(
+    title="CogniHelm Gateway API",
+    description="Immutable human-in-the-loop middleware for autonomous AI agents.",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
 
-# DYNAMIC SECURITY CHECK: Look for private enterprise extensions
-try:
-    from ee.advanced_auth import SlackSignatureMiddleware
-    from ee.circuit_breaker import is_task_resolved
-    
-    # Inject the proprietary security middleware if available
-    app.add_middleware(SlackSignatureMiddleware)
-    HAS_ENTERPRISE_SECURITY = True
-    print("🔒 [CogniHelm]: Enterprise Security & Circuit Breaker Active.")
-except ImportError:
-    HAS_ENTERPRISE_SECURITY = False
-    is_task_resolved = lambda task_id: False  # Fallback for Open-Core
-    print("🟢 [CogniHelm]: Running Open-Core mode (Development/Unverified).")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+)
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logging.error(f"System Error on {request.url}: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal system error occurred. Action frozen."}
+    )
+
+from src.middleware import SlackSignatureMiddleware
+from src.circuit_breaker import is_task_resolved
+
+# Inject the security middleware for Slack callbacks
+app.add_middleware(SlackSignatureMiddleware)
+print("🔒 [CogniHelm]: Slack Webhook HMAC Verification & Circuit Breaker Active.")
 
 @app.get("/")
 async def health():
@@ -47,21 +65,22 @@ async def handle_webhook_verification(platform: str, request: Request):
     if not adapter:
         raise HTTPException(status_code=404, detail=f"Platform adapter '{platform}' not found")
         
-    if platform.lower() == "whatsapp":
-        # Check challenge parameters
-        params = request.query_params
-        if params.get("hub.mode") == "subscribe" and params.get("hub.verify_token") == settings.whatsapp_verify_token:
-            from fastapi.responses import PlainTextResponse
-            return PlainTextResponse(content=params.get("hub.challenge", ""))
+    response = await adapter.handle_verification(request)
+    if response:
+        return response
             
     return {"status": "ignored"}
 
 @app.post("/v1/webhooks/{platform}-callback")
 async def handle_webhook_callback(platform: str, request: Request):
-    """Handles incoming human decisions from Slack or MS Teams with a Circuit Breaker."""
+    """Handles incoming human decisions from Slack or MS Teams with signature verification and a Circuit Breaker."""
     adapter = adapters.get(platform.lower())
     if not adapter:
         raise HTTPException(status_code=404, detail=f"Platform adapter '{platform}' not found")
+
+    # Enforce platform-specific cryptographic signature verification
+    if not await adapter.verify_signature(request):
+        raise HTTPException(status_code=401, detail="Unauthorized: Signature verification failed")
 
     # Extract standard payload properties via the selected adapter
     extracted = await adapter.extract_payload(request)
@@ -76,17 +95,11 @@ async def handle_webhook_callback(platform: str, request: Request):
 
     # --- LINEARITY CHECK (Circuit Breaker) ---
     if is_task_resolved(task_id):
-        if platform.lower() == "slack" and response_url:
-            update_message = {
-                "replace_original": "true",
-                "text": f"🔒 *LOCKED:* Task `{task_id}` has already been resolved."
-            }
-            req = urllib.request.Request(
+        if response_url:
+            await adapter.send_response_update(
                 response_url,
-                data=json.dumps(update_message).encode("utf-8"),
-                headers={"Content-Type": "application/json"}
+                f"🔒 *LOCKED:* Task `{task_id}` has already been resolved."
             )
-            urllib.request.urlopen(req)
         return {"status": "locked", "task_id": task_id}
 
     # Retrieve the payload_hash from the initial PENDING entry
@@ -106,18 +119,12 @@ async def handle_webhook_callback(platform: str, request: Request):
     )
 
     # Perform platform-specific response actions
-    if platform.lower() == "slack" and response_url:
+    if response_url:
         emoji = "✅" if status == "APPROVED" else "❌"
-        update_message = {
-            "replace_original": "true",
-            "text": f"{emoji} *Action {status}* by @{user_name}\nTask ID: `{task_id}`"
-        }
-        req = urllib.request.Request(
+        await adapter.send_response_update(
             response_url,
-            data=json.dumps(update_message).encode("utf-8"),
-            headers={"Content-Type": "application/json"}
+            f"{emoji} *Action {status}* by @{user_name}\nTask ID: `{task_id}`"
         )
-        urllib.request.urlopen(req)
 
     return {"status": "processed", "task_id": task_id, "decision": status}
 

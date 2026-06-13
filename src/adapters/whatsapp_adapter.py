@@ -9,15 +9,22 @@ class WhatsappAdapter(WebhookAdapter):
     Meta WhatsApp Cloud API Webhook Adapter.
     Supports verify token verification challenge (GET) and SHA-256 HMAC payload signatures (POST).
     """
+    async def handle_verification(self, request: Request):
+        """Handles the initial Meta verification challenge (GET)."""
+        settings = get_settings()
+        params = request.query_params
+        if params.get("hub.mode") == "subscribe" and params.get("hub.verify_token") == settings.whatsapp_verify_token:
+            from fastapi.responses import PlainTextResponse
+            challenge = params.get("hub.challenge", "")
+            return PlainTextResponse(content=challenge)
+        return None
+
     async def verify_signature(self, request: Request) -> bool:
         settings = get_settings()
 
         # 1. Verification Challenge (GET)
         if request.method == "GET":
-            params = request.query_params
-            mode = params.get("hub.mode")
-            token = params.get("hub.verify_token")
-            return mode == "subscribe" and token == settings.whatsapp_verify_token
+            return await self.handle_verification(request) is not None
 
         # 2. Payload Signature Check (POST)
         signature_header = request.headers.get("X-Hub-Signature-256")

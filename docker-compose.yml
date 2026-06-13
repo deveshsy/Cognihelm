@@ -19,4 +19,4 @@ services:
       - "8080:8080"
     env_file:
       - .env
-    command: uvicorn ee.console:app --host 0.0.0.0 --port 8080
+    command: uvicorn src.console:app --host 0.0.0.0 --port 8080

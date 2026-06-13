@@ -10,7 +10,5 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application directories
-COPY src/ ./src/
-COPY ee/ ./ee/
-COPY tests/ ./tests/
+# Copy application code (excluding files listed in .dockerignore)
+COPY . .

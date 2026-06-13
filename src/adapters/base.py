@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from fastapi import Request
+from fastapi import Request, Response
 
 class WebhookAdapter(ABC):
     """
@@ -28,3 +28,17 @@ class WebhookAdapter(ABC):
         }
         """
         pass
+
+    async def handle_verification(self, request: Request) -> Response | None:
+        """
+        Handles platform verification challenges (e.g. GET subscription checks).
+        Returns a Response object or None if not supported.
+        """
+        return None
+
+    async def send_response_update(self, response_url: str, text: str) -> bool:
+        """
+        Sends an asynchronous callback response update to the platform (if supported).
+        Returns True if successful, False otherwise.
+        """
+        return False

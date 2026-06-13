@@ -97,7 +97,7 @@ For teams that need managed infrastructure and advanced compliance features, we 
 | **Ledger DB** | Bring Your Own AWS | Included & Backed Up |
 | **Integrations** | All Webhook Adapters | All Webhook Adapters |
 | **Compliance Console** | Basic Local Dashboard | Hosted Multi-Tenant Dashboard |
-| **Security** | Standard API Keys | SAML / SSO Integration |
+| **Security** | Webhook HMAC Verification & Keys | SAML / SSO / RBAC Integration |
 | **Support** | GitHub Issues | Dedicated Slack Channel & SLA |
 
 **[👉 Join the CogniHelm Cloud Waitlist Here](mailto:cognihelm@gmail.com)**
