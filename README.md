@@ -63,7 +63,7 @@ flowchart LR
 This repository follows a professional, enterprise-grade architecture:
 
 ```text
-hitl_api/
+CogniHelm/
 ├── src/                    # API Gateway & Console Source
 │   ├── main.py             # Gateway entrypoint & setup
 │   ├── console.py          # Compliance console entrypoint & setup
